@@ -1,0 +1,25 @@
+---
+# vars file for provision-instances
+flavor: m2.small
+keypair: ansible_ssh
+network:
+  public: 10.10.10.0/24
+  private: 20.20.20.0/24
+image: rhel-guest
+instances:
+  - name: app1
+    group: apps
+    deployment_name: QA
+    port: 8080
+  - name: app2
+    group: apps
+    deployment_name: QA
+    port: 8080
+  - name: db
+    group: appdbs
+    deployment_name: QA
+    port: 5432
+  - name: frontend
+    group: frontends
+    deployment_name: QA
+    port: 80

@@ -1,0 +1,10 @@
+---
+# provision instances
+- name: create instances
+  hosts: jumpbox
+  become: true
+  gather_facts: false
+  tasks:
+  - name: create all instances
+    include_role:
+      name: provision-instances

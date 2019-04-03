@@ -1,0 +1,11 @@
+---
+# handlers file for provision-instances
+- name: add floating IP to each instance
+  os_floating_ip:
+    cloud: ospcloud
+    state: present
+    reuse: "yes"
+    server: "{{item.name}}"
+    network: ext_network
+  loop: "{{instances}}"  
+  register: floatingip

@@ -1,0 +1,49 @@
+---
+# tasks file for provision-instances
+- name: provision the instances
+  os_server:
+    cloud: ospcloud
+    name: "{{item.name}}"
+    image: "{{image}}"
+    meta: group={{item.group}},deployment_name={{item.deployment_name}}
+    flavor: "{{flavor}}"
+    state: present
+    key_name: "{{keypair}}"
+    nics:
+    - net-name: int_network
+    userdata: |
+      #!/bin/bash
+      curl -o /tmp/openstack.pub http://www.opentlc.com/download/ansible_bootcamp/openstack_keys/openstack.pub
+      cat /tmp/openstack.pub >> /home/cloud-user/.ssh/authorized_keys
+      curl -o /tmp/internal.repo http://www.opentlc.com/download/ansible_bootcamp/repo/internal.repo
+      cp /tmp/internal.repo /etc/yum.repos.d/internal.repo
+  loop: "{{instances}}"
+  register: instanceip
+    # in memory inventory role for deploying the instances
+
+- name: debug instance ip
+  debug:
+    msg: "{{instanceip}}"
+  loop: "{{instanceip.results}}"
+
+# map the floating ip to the openstack instance network ip
+- name: add floating IP to each instance
+  os_floating_ip:
+    cloud: ospcloud
+    state: present
+    reuse: "yes"
+    server: "{{item.name}}"
+    network: ext_network
+  loop: "{{instances}}"  
+  register: floatingip
+
+- name: debug floating ip
+  debug:
+    msg: "{{item}}"
+  loop: "{{floatingip.results}}"
+
+- name: Check that instances are running
+  wait_for:
+    host: "{{item.floating_ip.floating_ip_address}}"
+    port: 22
+  loop: "{{floatingip.results}}"
