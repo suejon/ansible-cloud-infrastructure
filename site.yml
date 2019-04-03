@@ -8,3 +8,73 @@
   - name: create all instances
     include_role:
       name: provision-instances
+  - name: Create in memory inventory
+    include_role:
+      name: inventory
+    tags:
+      - deploy
+
+- name: fix tty bug
+  hosts: all
+  become: true
+  tasks:
+  - name: enable sudo without tty for some ansible commands
+    replace:
+      path: /etc/sudoers
+      regexp: '^Defaults\s*requiretty'
+      replace: 'Defaults  !requiretty'
+      backup: yes
+
+- name: configure repositories on all hosts
+  hosts: all
+  gather_facts: true # remove later! speeds up testing
+  become: true
+
+  tasks:
+  - name: enable repos
+    template:
+      src: ./open_three-tier-app.repo
+      dest: /etc/yum.repos.d/open_three-tier-app.repo
+      mode: 0644
+    tags:
+      - deploy
+
+- name: deploy haproxy on for front end
+  hosts: frontends
+  gather_facts: true # remove later! speeds up testing
+  become: true
+  tasks:
+    - include_role:
+        name: haproxy
+      tags:
+      - deploy
+
+- name: install and deploy tomcat
+  hosts: apps
+  gather_facts: true
+  become: true
+  tasks:
+    - include_role:
+        name: webservers
+      tags:
+      - deploy
+
+- name: install and deploy postgres
+  gather_facts: false
+  become: true
+  hosts: appdbs
+  tasks:
+  - include_role:
+      name: db
+    tags:
+      - deploy
+
+- name: deploy apache
+  gather_facts: false
+  become: true
+  hosts: apps
+  tasks:
+    - include_role:
+        name: httpd
+      tags:
+      - deploy

@@ -8,6 +8,7 @@
     meta: group={{item.group}},deployment_name={{item.deployment_name}}
     flavor: "{{flavor}}"
     state: present
+    security_groups: "{{ item.security_group_name }}"
     key_name: "{{keypair}}"
     nics:
     - net-name: int_network
@@ -21,26 +22,46 @@
   register: instanceip
     # in memory inventory role for deploying the instances
 
-- name: debug instance ip
-  debug:
-    msg: "{{instanceip}}"
-  loop: "{{instanceip.results}}"
+# - name: enable sudo without tty for some ansible commands
+#   replace:
+#     path: /etc/sudoers
+#     regexp: '^Defaults\s*requiretty'
+#     replace: 'Defaults  !requiretty'
+#     backup: yes
+
+# - name: debug instance ip
+#   debug:
+#     msg: "{{instanceip}}"
+#   loop: "{{instanceip.results}}"
+
+#  - name: Add floating IP to "{{ instance_name }}"
+#     os_floating_ip:
+#       cloud: ospcloud
+#       state: present
+#       reuse: yes
+#       server: "{{ instance_name }}"
+#       network: ext_network
+#       wait: true
+#       timeout: 180
+# register: instancefloatingip
 
 # map the floating ip to the openstack instance network ip
 - name: add floating IP to each instance
   os_floating_ip:
     cloud: ospcloud
     state: present
-    reuse: "yes"
+    reuse: yes
     server: "{{item.name}}"
     network: ext_network
-  loop: "{{instances}}"  
+    wait: true
+    timeout: 180
+  loop: "{{instances}}"
   register: floatingip
 
-- name: debug floating ip
-  debug:
-    msg: "{{item}}"
-  loop: "{{floatingip.results}}"
+# - name: debug floating ip
+#   debug:
+#     msg: "{{item}}"
+#   loop: "{{floatingip.results}}"
 
 - name: Check that instances are running
   wait_for:

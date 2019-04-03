@@ -11,15 +11,19 @@ instances:
     group: apps
     deployment_name: QA
     port: 8080
+    security_group_name: apps
   - name: app2
     group: apps
     deployment_name: QA
     port: 8080
+    security_group_name: apps
   - name: db
     group: appdbs
     deployment_name: QA
     port: 5432
+    security_group_name: db
   - name: frontend
     group: frontends
     deployment_name: QA
     port: 80
+    security_group_name: frontend

@@ -1,0 +1,44 @@
+---
+- name: configure repositories on all hosts
+  hosts: all
+  gather_facts: false # remove later! speeds up testing
+  become: true
+
+  tasks:
+  - name: enable repos
+    template:
+      src: ./open_three-tier-app.repo
+      dest: /etc/yum.repos.d/open_three-tier-app.repo
+      mode: 0644
+
+- name: deploy haproxy on for front end
+  hosts: frontends
+  gather_facts: false # remove later! speeds up testing
+  become: true
+  tasks:
+    - include_role:
+        name: haproxy
+
+- name: install and deploy tomcat
+  hosts: apps
+  gather_facts: true
+  become: true
+  tasks:
+    - include_role:
+        name: webservers
+
+- name: install and deploy postgres
+  gather_facts: false
+  become: true
+  hosts: appdbs
+  tasks:
+  - include_role:
+      name: db
+
+- name: deploy apache
+  gather_facts: false
+  become: true
+  hosts: apps
+  tasks:
+    - include_role:
+        name: httpd
